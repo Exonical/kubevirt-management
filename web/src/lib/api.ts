@@ -6,14 +6,15 @@ export async function api<T = unknown>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
+  const { headers: initHeaders, ...restInit } = init;
   const res = await fetch(path, {
+    ...restInit,
     credentials: "include",
     headers: {
       Accept: "application/json",
       ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...init.headers,
+      ...(initHeaders as Record<string, string>),
     },
-    ...init,
   });
   if (!res.ok) {
     throw res;
