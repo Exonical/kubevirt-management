@@ -1,0 +1,79 @@
+image:
+  repository: ghcr.io/exonical/kubevirt-management
+  tag: ""  # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: kubevirt-management.example.com
+  tls:
+    enabled: false
+    secretName: ""
+
+# Auth mode: oidc | impersonation
+# - oidc:          forwards the user's ID token to kube-apiserver. The cluster
+#                  must trust the same OIDC issuer.
+# - impersonation: uses the pod ServiceAccount token + Impersonate-* headers.
+auth:
+  mode: oidc
+  oidc:
+    issuer: ""
+    clientID: ""
+    redirectURL: ""
+    usernameClaim: email
+    groupsClaim: groups
+    scopes:
+      - openid
+      - profile
+      - email
+      - groups
+      - offline_access
+  # If existingSecret is set the chart will reference its keys
+  # (clientSecret, sessionHashKey, sessionBlockKey) instead of creating one.
+  existingSecret: ""
+  # When existingSecret is empty, generate-on-install values populate a
+  # chart-managed Secret. Production deployments SHOULD pre-create the
+  # secret with strong keys and set existingSecret.
+  clientSecret: ""
+  sessionHashKey: ""
+  sessionBlockKey: ""
+
+rbac:
+  # In OIDC mode the pod's SA only needs SelfSubjectAccessReview /
+  # TokenReview. In impersonation mode it additionally needs to impersonate
+  # users, groups, and (optionally) serviceaccounts.
+  create: true
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+extraEnv: []
