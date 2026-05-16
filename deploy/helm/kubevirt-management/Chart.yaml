@@ -1,0 +1,13 @@
+apiVersion: v2
+name: kubevirt-management
+description: Web UI for managing KubeVirt virtual machines using cluster RBAC.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - kubevirt
+  - virtualization
+  - dashboard
+home: https://github.com/Exonical/kubevirt-management
+sources:
+  - https://github.com/Exonical/kubevirt-management

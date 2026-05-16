@@ -1,0 +1,21 @@
+# Local dev: a Dex OIDC provider with a static admin user.
+# Useful for testing the OIDC flow without a real IdP.
+#
+# After `docker compose up -d`, the app can be started with:
+#   OIDC_ISSUER=http://localhost:5556/dex \
+#   OIDC_CLIENT_ID=kubevirt-management \
+#   OIDC_CLIENT_SECRET=local-dev-secret \
+#   OIDC_REDIRECT_URL=http://localhost:8080/api/auth/callback \
+#   SESSION_HASH_KEY=$(openssl rand -hex 64) \
+#   SESSION_BLOCK_KEY=$(openssl rand -hex 32) \
+#   SESSION_SECURE=false \
+#   AUTH_MODE=impersonation \
+#   go run ./cmd/server
+services:
+  dex:
+    image: ghcr.io/dexidp/dex:v2.41.1
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    ports:
+      - "5556:5556"
+    volumes:
+      - ./deploy/dex/config.yaml:/etc/dex/config.yaml:ro

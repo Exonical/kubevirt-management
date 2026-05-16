@@ -1,0 +1,42 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kubevirt-management.fullname" . }}
+  labels:
+    {{- include "kubevirt-management.labels" . | nindent 4 }}
+rules:
+  # Pre-flight permission checks; the app uses SSAR to grey out actions
+  # the user cannot perform. The real authorization happens at the
+  # kube-apiserver via the user's own token / impersonation.
+  - apiGroups: ["authorization.k8s.io"]
+    resources: ["selfsubjectaccessreviews", "selfsubjectrulesreviews"]
+    verbs: ["create"]
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
+{{- if eq .Values.auth.mode "impersonation" }}
+  # Required to impersonate the OIDC-authenticated user.
+  - apiGroups: [""]
+    resources: ["users", "groups", "serviceaccounts"]
+    verbs: ["impersonate"]
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["userextras/*"]
+    verbs: ["impersonate"]
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "kubevirt-management.fullname" . }}
+  labels:
+    {{- include "kubevirt-management.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "kubevirt-management.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "kubevirt-management.fullname" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
