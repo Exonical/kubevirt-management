@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -19,11 +20,16 @@ import (
 func main() {
 	logger := newLogger()
 	slog.SetDefault(logger)
+	if err := run(logger); err != nil {
+		logger.Error("fatal", "err", err)
+		os.Exit(1)
+	}
+}
 
+func run(logger *slog.Logger) error {
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Error("load config", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("load config: %w", err)
 	}
 
 	logger.Info("starting kubevirt-management",
@@ -37,8 +43,7 @@ func main() {
 
 	srv, err := server.New(cfg, logger)
 	if err != nil {
-		logger.Error("build server", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("build server: %w", err)
 	}
 
 	httpServer := &http.Server{
@@ -61,8 +66,7 @@ func main() {
 
 	select {
 	case err := <-errCh:
-		logger.Error("http server error", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("http server: %w", err)
 	case <-ctx.Done():
 		logger.Info("shutdown signal received")
 	}
@@ -70,10 +74,10 @@ func main() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		logger.Error("http shutdown", "err", err)
-		os.Exit(1)
+		return fmt.Errorf("http shutdown: %w", err)
 	}
 	logger.Info("shutdown complete")
+	return nil
 }
 
 func newLogger() *slog.Logger {

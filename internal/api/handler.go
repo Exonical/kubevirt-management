@@ -41,7 +41,7 @@ func VersionHandler(w http.ResponseWriter, _ *http.Request) {
 // Readyz reports readiness by attempting a discovery call against the API
 // server using the pod's own ServiceAccount. Per-user reachability is
 // checked at request time.
-func (h *Handler) Readyz(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Readyz(w http.ResponseWriter, _ *http.Request) {
 	base := h.clients.BaseConfig()
 	if base == nil {
 		writeJSONError(w, http.StatusServiceUnavailable, "no kubernetes config")

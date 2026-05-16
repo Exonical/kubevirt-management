@@ -86,12 +86,12 @@ func loadBaseConfig(cfg *config.Config) (*rest.Config, error) {
 
 func applyOverrides(c *rest.Config, cfg *config.Config) {
 	if cfg.InsecureSkipVerify {
-		c.TLSClientConfig.Insecure = true
-		c.TLSClientConfig.CAData = nil
-		c.TLSClientConfig.CAFile = ""
+		c.Insecure = true
+		c.CAData = nil
+		c.CAFile = ""
 	}
 	if cfg.CABundlePath != "" {
-		c.TLSClientConfig.CAFile = cfg.CABundlePath
+		c.CAFile = cfg.CABundlePath
 	}
 	c.UserAgent = "kubevirt-management/0.0.0"
 }
