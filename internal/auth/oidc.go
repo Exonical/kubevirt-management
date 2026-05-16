@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -16,6 +17,16 @@ import (
 
 	"github.com/Exonical/kubevirt-management/internal/config"
 )
+
+// safeRedirect returns target if it is a same-origin relative path,
+// otherwise "/". This blocks open-redirect abuse via the redirect_to query
+// parameter (//evil.com, https://evil.com, etc.).
+func safeRedirect(target string) string {
+	if target == "" || !strings.HasPrefix(target, "/") || strings.HasPrefix(target, "//") || strings.HasPrefix(target, "/\\") {
+		return "/"
+	}
+	return target
+}
 
 // OIDCManager handles discovery, login redirects, and token exchange.
 type OIDCManager struct {
@@ -164,10 +175,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to generate nonce", http.StatusInternalServerError)
 		return
 	}
-	redirectTo := r.URL.Query().Get("redirect_to")
-	if redirectTo == "" {
-		redirectTo = "/"
-	}
+	redirectTo := safeRedirect(r.URL.Query().Get("redirect_to"))
 	if err := h.state.save(w, &stateData{State: state, Nonce: nonce, RedirectTo: redirectTo}); err != nil {
 		http.Error(w, "failed to save state", http.StatusInternalServerError)
 		return
@@ -207,11 +215,7 @@ func (h *Handler) Callback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "save session failed", http.StatusInternalServerError)
 		return
 	}
-	target := sd.RedirectTo
-	if target == "" {
-		target = "/"
-	}
-	http.Redirect(w, r, target, http.StatusFound)
+	http.Redirect(w, r, safeRedirect(sd.RedirectTo), http.StatusFound)
 }
 
 // Logout clears the session cookie. The OIDC provider is not contacted;

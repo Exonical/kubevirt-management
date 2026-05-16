@@ -76,13 +76,16 @@ func (s *Server) buildRouter() *chi.Mux {
 	r.Use(requestLogger(s.logger))
 	r.Use(chimw.Recoverer)
 	r.Use(chimw.Compress(5))
-	r.Use(chimw.NoCache)
 
 	authMW := auth.NewMiddleware(s.sess, s.logger)
 	authHandler := auth.NewHandler(s.cfg, s.oidc, s.sess, s.logger)
 	apiHandler := api.NewHandler(s.clients, s.kv, s.logger)
 
 	r.Route("/api", func(r chi.Router) {
+		// NoCache only applies to API responses; the SPA static handler
+		// needs to keep its long-lived cache headers for hashed assets.
+		r.Use(chimw.NoCache)
+
 		r.Get("/healthz", api.Healthz)
 		r.Get("/readyz", apiHandler.Readyz)
 		r.Get("/version", api.VersionHandler)

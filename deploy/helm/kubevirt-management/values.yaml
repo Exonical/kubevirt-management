@@ -36,9 +36,9 @@ auth:
       - email
       - groups
       - offline_access
-    # If existingSecret is set the chart will reference its keys
-    # (clientSecret, sessionHashKey, sessionBlockKey) instead of creating one.
-    existingSecret: ""
+  # If existingSecret is set the chart will reference its keys
+  # (clientSecret, sessionHashKey, sessionBlockKey) instead of creating one.
+  existingSecret: ""
   # When existingSecret is empty, generate-on-install values populate a
   # chart-managed Secret. Production deployments SHOULD pre-create the
   # secret with strong keys and set existingSecret.
